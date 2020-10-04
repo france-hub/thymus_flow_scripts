@@ -28,13 +28,8 @@ suppressPackageStartupMessages({
   library(ggrepel)
   library(slingshot)
   library(knn.covertree)
-  library(destiny)
   library(readxl)
 })
-
-############################
-######## LOAD DATA #########
-############################
 
 ### Load the FCS files 
 # Set PrimaryDirectory where this script is located
@@ -71,25 +66,21 @@ panel <- as.data.frame(panel)
 all(panel$fcs_colname %in% colnames(fs)) #check
 
 ##Building metadata dataframe
-#Define condition
+#Define condition, patient_id, sample_id and file_name
 condition <- FCSfiles
 condition <- word(condition, 1, sep = "_")
 condition[grepl("C", condition)] <- "Ctrl"
 condition[grepl("Z", condition)] <- "Zd"
 
-#Define patient_id
 patient_id <- FCSfiles
 patient_id <- word(patient_id, 2, sep = "_")
 
-#Define sample_id
 sample_id <- paste(patient_id, condition, sep = "_")
 
-#Define file_name
 file_name <- FCSfiles
 
 #Create metadata dataframe
 md <- as.data.frame(cbind(file_name, sample_id, condition, patient_id))
-
 
 #Check if ids and md$file_name are the same
 ids <- c(fsApply(fs, identifier))
@@ -116,7 +107,7 @@ CATALYST::pbMDS(sce, color_by = "condition", label = "patient_id")
 # Non Redundancy Score (NRS)
 plotNRS(sce, features = type_markers(sce), color_by = "condition")
 
-#Delete outlier 011
+# Delete outlier 011
 sce <- filterSCE(sce, patient_id != "011")
 
 # Run FlowSOM and ConsensusClusterPlus
@@ -146,16 +137,6 @@ plotDR(sce, "UMAP", color_by = "meta16") + facet_wrap("condition") +
   guides(color = guide_legend(ncol = 2, override.aes = list(size = 3))) #different conditions
 plotDR(sce, "UMAP", color_by = "meta16", facet_by = "sample_id") #by sample_id
 
-#Plot UMAP + contour
-plot <- plotDR(sce, "UMAP", color_by = "meta16") + facet_wrap("condition")
-plot + geom_density2d(binwidth = 0.006, colour = "black")
-
-#Abundances
-#Differential abundance
-plotAbundances(sce, k = "meta6", by = "sample_id", group_by = "condition")
-plotAbundances(sce, k = "meta16", by = "cluster_id", group_by = "condition")
-
-##Add annotations
 #Read annotation excel file
 annotation_table <- readxl::read_excel("annotation.xlsx")
 annotation_table
@@ -169,14 +150,14 @@ annotation_table$new_cluster <- factor(annotation_table$new_cluster,
 sce <- mergeClusters(sce, k = "meta16", 
                      table = annotation_table, id = "cluster_annotation", overwrite = TRUE)
 
-#Heatmap with annotations
+# Plot heatmap with annotations
 plotExprHeatmap(sce, features = "type", 
                 by = "cluster_id", k = "meta16", m = "cluster_annotation", scale = "last", bin_anno = TRUE)
 
 plotExprHeatmap(sce, features = "type",
                 by = "cluster_id", k = "cluster_annotation", scale = "last", bin_anno = TRUE)
 
-#UMAP with annotations
+#Plot UMAP with annotations
 dev.off()
 plotDR(sce, "UMAP", color_by = "cluster_annotation") + facet_wrap("condition")
 plot <- plotDR(sce, "UMAP", color_by = "cluster_annotation") + facet_wrap("condition")
@@ -185,5 +166,5 @@ plot + geom_density2d(binwidth = 0.006, colour = "black")
 #Plot abundancies 
 plotAbundances(sce, k = "cluster_annotation", by = "cluster_id", shape_by = NULL)
 
-# Save workspace 
+# Save
 save(list = ls(), file = "FlowThymus_sce_CD45+_w3_part2.rds")

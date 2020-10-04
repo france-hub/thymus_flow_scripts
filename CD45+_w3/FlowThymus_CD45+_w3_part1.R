@@ -1,26 +1,6 @@
 rm(list = ls())
 
 ###############################
-## INSTALL REQUIRED PACKAGES ##
-###############################
-
-if(!require('rstudioapi')) {
-  install.packages('rstudioapi')
-}
-if(!require('flowCore')){
-  install.packages("flowCore")
-}
-if(!require('ggplot2')){
-  install.packages("ggplot2")
-}
-if(!require('dplyr')){
-  install.packages('dplyr')
-}
-if(!require('cytofCore')){
-  BiocManager::install('cytofCore')
-}
-
-###############################
 ### LOAD REQUIRED PACKAGES ####
 ###############################
 
